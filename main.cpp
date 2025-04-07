@@ -20,7 +20,7 @@ public:
 
     cobra::app_status update(cobra::renderer &renderer, const double delta_time) override {
         renderer.clear();
-        renderer.clear_color(cobra::color(0.0f, 1.0f));
+        renderer.clear_color(cobra::color(0.2f, 0.3f, 0.3f, 1.0f));
 
         this->camera.correlate(test.camera);
 
