@@ -3,6 +3,7 @@
 #include <glad/gl.h>
 
 #include <shaders/test.hcs>
+#include <shaders/text.hcs>
 
 class test_app final : public cobra::app {
     cobra::camera camera;
@@ -10,10 +11,14 @@ class test_app final : public cobra::app {
 public:
     explicit test_app(cobra::renderer &renderer)
         : app(renderer),
-          camera(renderer),
+          camera(renderer, {
+              {GLFW_KEY_W, cobra::direction::FORWARD},
+              {GLFW_KEY_A, cobra::direction::LEFT},
+              {GLFW_KEY_S, cobra::direction::BACKWARD},
+              {GLFW_KEY_D, cobra::direction::RIGHT},
+          }),
           ogre("test.obj") {
         shader::compile(test);
-        shader::use(test);
     }
 
     ~test_app() override = default;
@@ -22,6 +27,8 @@ public:
         renderer.clear();
         renderer.clear_color(cobra::color(0.2f, 0.3f, 0.3f, 1.0f));
 
+        shader::use(test);
+        this->camera.input_hook(delta_time);
         this->camera.correlate(test.camera);
 
         this->ogre.draw();
@@ -39,7 +46,7 @@ public:
 
 int main() {
     const cobra::window_spec spec {
-        .fullscreen = true
+        .fullscreen = false
     };
 
     cobra::renderer renderer { spec };

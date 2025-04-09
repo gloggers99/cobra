@@ -1,5 +1,7 @@
 #pragma once
 
+#include <unordered_map>
+
 #include "uniform.hpp"
 #include "matrix_interface.hpp"
 
@@ -7,6 +9,10 @@
 
 #include <glad/gl.h>
 #include <GLFW/glfw3.h>
+
+namespace cobra {
+    enum class key_event;
+}
 
 namespace cobra {
     class renderer;
@@ -36,13 +42,15 @@ namespace cobra {
 
         float mouse_sensitivity;
 
-        glm::mat4 create_view_matrix();
-        glm::mat4 create_projection_matrix();
+        std::unordered_map<int, direction> key_map;
+
+        [[nodiscard]] glm::mat4 create_view_matrix() const;
+        [[nodiscard]] glm::mat4 create_projection_matrix() const;
 
         /**
          * Combination of both Camera::createViewMatrix() and Camera::createProjectionMatrix()
          */
-        glm::mat4 create_camera_matrix();
+        [[nodiscard]] glm::mat4 create_camera_matrix() const;
 
     public:
         void move(direction direction, float speed);
@@ -52,7 +60,21 @@ namespace cobra {
          */
         glm::mat4 update() override;
 
-        explicit camera(cobra::renderer &renderer);
+        /**
+         * Needs to be called on a frame update loop to handle camera input
+         * if necessary
+         */
+        void input_hook(double speed);
+
+        /**
+         * Create an instance of a camera
+         * @param renderer Reference to current renderer
+         * @param key_map Optional key map to move the camera around with
+         */
+        explicit camera(
+            cobra::renderer &renderer,
+            const std::unordered_map<int, direction> &key_map = {}
+        );
         ~camera() override;
     };
 

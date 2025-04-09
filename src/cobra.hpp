@@ -8,9 +8,11 @@
 
 #include "matrix/matrix_interface.hpp"
 #include "matrix/camera.hpp"
+#include "matrix/ortho.hpp"
 
 #include "model/model.hpp"
 #include "model/vertex_stack.hpp"
 
+#include "renderer/font.hpp"
 #include "renderer/renderer.hpp"
 #include "renderer/window_spec.hpp"

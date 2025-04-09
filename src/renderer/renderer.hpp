@@ -41,8 +41,6 @@ namespace cobra {
         explicit renderer(const window_spec &spec = {});
         ~renderer();
 
-        // TODO: EVERYTHING here needs to be redone, declarative drawing needs to be implemented.
-
         template <app_type app_class>
         void run_app() {
             app_class a { *this };
@@ -77,7 +75,10 @@ namespace cobra {
         void clear(GLbitfield mask = GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT) const;
         void clear_color(color color) const;
 
-        GLFWwindow *get_window();
+        GLFWwindow *get_window() const;
+
+        [[nodiscard]] int get_window_width() const;
+        [[nodiscard]] int get_window_height() const;
     };
 
 }

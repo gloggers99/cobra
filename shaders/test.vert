@@ -6,5 +6,5 @@ layout (location = 1) in vec2 texCoord;
 uniform mat4 camera;
 
 void main() {
-    gl_Position = camera * vec4(position, 1.0);
+    gl_Position = camera * vec4(position.x, position.y, position.z, 1.0);
 }

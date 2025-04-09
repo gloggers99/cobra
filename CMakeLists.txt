@@ -27,6 +27,10 @@ add_library(cobra STATIC
         src/renderer/window_spec.hpp
         src/app.cpp
         src/app.hpp
+        src/renderer/font.cpp
+        src/renderer/font.hpp
+        src/matrix/ortho.cpp
+        src/matrix/ortho.hpp
 )
 
 set(CMAKE_EXE_LINKER_FLAGS "--static")

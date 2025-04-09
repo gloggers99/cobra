@@ -6,18 +6,18 @@
 #include <glm/ext.hpp>
 
 namespace cobra {
-    glm::mat4 camera::create_view_matrix() {
+    glm::mat4 camera::create_view_matrix() const {
         return glm::lookAt(this->camera_position, this->camera_position + this->camera_front, this->camera_up);
     }
 
-    glm::mat4 camera::create_projection_matrix() {
+    glm::mat4 camera::create_projection_matrix() const {
         int width, height;
         glfwGetWindowSize(renderer.get_window(), &width, &height);
 
         return glm::perspective(glm::radians(this->field_of_view), static_cast<float>(width) / static_cast<float>(height), 0.1f, 1000.0f);
     }
 
-    glm::mat4 camera::create_camera_matrix() {
+    glm::mat4 camera::create_camera_matrix() const {
         return this->create_projection_matrix() * this->create_view_matrix();
     }
 
@@ -40,7 +40,7 @@ namespace cobra {
         }
     }
 
-    glm::mat4 camera::update(){
+    glm::mat4 camera::update() {
         double xpos;
         double ypos;
         glfwGetCursorPos(this->renderer.get_window(), &xpos, &ypos);
@@ -77,7 +77,15 @@ namespace cobra {
         return this->create_camera_matrix();
     }
 
-    camera::camera(cobra::renderer &renderer)
+    void camera::input_hook(const double speed) {
+        for (auto [key, direction] : this->key_map) {
+            if (glfwGetKey(this->renderer.get_window(), key)) {
+                this->move(direction, speed);
+            }
+        }
+    }
+
+    camera::camera(cobra::renderer &renderer, const std::unordered_map<int, direction> &key_map)
         : renderer(renderer),
 
           camera_position(glm::vec3(0.0f, 0.0f, 0.0f)),
@@ -90,7 +98,9 @@ namespace cobra {
           yaw(-90.0f),
           pitch(0.0f),
 
-          mouse_sensitivity(0.5f) {
+          mouse_sensitivity(0.5f),
+
+          key_map(key_map) {
         int width, height;
         glfwGetWindowSize(renderer.get_window(), &width, &height);
 

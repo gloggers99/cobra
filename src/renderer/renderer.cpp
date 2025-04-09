@@ -22,7 +22,6 @@ namespace cobra {
             key,
             action == GLFW_PRESS ? key_event::PRESS : key_event::RELEASE) == app_status::BREAK)
             user_pointer_renderer->run = false;
-
     }
 
     renderer::renderer(const window_spec &spec) :
@@ -78,11 +77,19 @@ namespace cobra {
         glClearColor(COBRA_GL_COLOR_CONVERT(color));
     }
 
-
-
-    GLFWwindow *renderer::get_window() {
+    GLFWwindow *renderer::get_window() const {
         return this->window;
     }
 
+    int renderer::get_window_width() const {
+        int width;
+        glfwGetWindowSize(this->window, &width, nullptr);
+        return width;
+    }
 
+    int renderer::get_window_height() const {
+        int height;
+        glfwGetWindowSize(this->window, nullptr, &height);
+        return height;
+    }
 }

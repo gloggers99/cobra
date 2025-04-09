@@ -10,7 +10,7 @@ namespace cobra {
         /**
          * Update the matrix with new data, this function MUST return a valid glm::mat4
          */
-        virtual glm::mat4 update() = 0;
+        [[nodiscard]] virtual glm::mat4 update() = 0;
 
     public:
         virtual ~matrix_interface() = default;
