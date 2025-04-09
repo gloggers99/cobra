@@ -7,7 +7,10 @@
 
 class test_app final : public cobra::app {
     cobra::camera camera;
+    cobra::ortho ortho;
     cobra::model ogre;
+
+    cobra::font font;
 public:
     explicit test_app(cobra::renderer &renderer)
         : app(renderer),
@@ -17,8 +20,13 @@ public:
               {GLFW_KEY_S, cobra::direction::BACKWARD},
               {GLFW_KEY_D, cobra::direction::RIGHT},
           }),
-          ogre("test.obj") {
+          ortho(renderer),
+          ogre("test.obj"),
+          font("roboto.ttf") {
         shader::compile(test);
+        shader::compile(text);
+
+        this->ortho.correlate(text.projection);
     }
 
     ~test_app() override = default;
@@ -33,10 +41,12 @@ public:
 
         this->ogre.draw();
 
+        shader::use(text);
+
         return cobra::app_status::CONTINUE;
     }
 
-    cobra::app_status keypress(cobra::renderer &renderer, int key, cobra::key_event type) override {
+    cobra::app_status keypress(cobra::renderer &renderer, const int key, cobra::key_event type) override {
         if (key == GLFW_KEY_ESCAPE)
             return cobra::app_status::BREAK;
 

@@ -6,6 +6,7 @@ ___
 To keep cobra as lean as possible we use as little dependencies as we can
 - GLFW (considering switching to SDL3_opengl)
 - GLM
+- FreeType
 
 ## Features
 - [X] Lightning fast OBJ file loading, leverages pre-allocation or file-streaming depending on size

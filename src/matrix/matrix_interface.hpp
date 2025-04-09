@@ -1,6 +1,6 @@
 #pragma once
 
-#include "uniform.hpp"
+#include <uniform.hpp>
 
 namespace cobra {
     class matrix_interface {

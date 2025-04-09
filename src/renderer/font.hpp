@@ -1,12 +1,12 @@
 #pragma once
 
-#include <filesystem>
+#include <string>
 #include <map>
 
 #include <glm/glm.hpp>
 
+#include <freetype2/ft2build.h>
 #include <freetype2/freetype/freetype.h>
-#define FT_FREETYPE_H
 
 namespace cobra {
     /**
@@ -32,7 +32,7 @@ namespace cobra {
         std::map<char, character> characters;
     public:
         explicit font(
-            const std::filesystem::path &font_path
+            const std::string &font_path
         );
         ~font();
     };

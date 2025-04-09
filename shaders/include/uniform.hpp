@@ -10,7 +10,6 @@
 
 template<typename T>
 class uniform {
-private:
     std::string name;
     GLuint *parent_program;
 

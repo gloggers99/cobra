@@ -18,7 +18,7 @@ layout (location = 1) in vec2 texCoord;
 uniform mat4 camera;
 
 void main() {
-    gl_Position = camera * vec4(position, 1.0);
+    gl_Position = camera * vec4(position.x, position.y, position.z, 1.0);
 }
 )", R"(
 #version 460
@@ -26,7 +26,7 @@ void main() {
 out vec4 FragColor;
 
 void main() {
-    FragColor = vec4(1.0);
+    FragColor = vec4(0.5);
 })") {}
     
 	uniform<glm::mat4> camera = uniform<glm::mat4>("camera", &this->shader_program);

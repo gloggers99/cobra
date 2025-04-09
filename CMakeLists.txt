@@ -33,11 +33,12 @@ add_library(cobra STATIC
         src/matrix/ortho.hpp
 )
 
-set(CMAKE_EXE_LINKER_FLAGS "--static")
+set(CMAKE_EXE_LINKER_FLAGS "--static -mwindows")
 add_dependencies(cobra EmbedShaders)
 target_include_directories(cobra PUBLIC include)
-target_link_libraries(cobra PUBLIC glfw3)
+target_include_directories(cobra PUBLIC shaders/include/)
+target_include_directories(cobra PUBLIC "C:\\msys64\\mingw64\\include\\freetype2\\")
+target_link_libraries(cobra PUBLIC glfw3 freetype png harfbuzz bz2 graphite2 z ole32 brotlidec brotlicommon rpcrt4)
 
 add_executable(cobra_test main.cpp)
-target_include_directories(cobra PUBLIC shaders/include/)
 target_link_libraries(cobra_test PRIVATE cobra)

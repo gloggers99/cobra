@@ -1,7 +1,7 @@
-#version 100
+#version 460
 
-layout (position = 0) in vec2 position;
-layout (position = 1) in vec2 texture_coords;
+layout (location = 0) in vec2 position;
+layout (location = 1) in vec2 texture_coords;
 
 out vec2 frag_texture_coords;
 

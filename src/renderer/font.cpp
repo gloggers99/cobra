@@ -9,9 +9,9 @@ namespace cobra {
     FT_Library font_library = nullptr;
     bool font_library_initialized = false;
 
-    font::font(const std::filesystem::path &font_path)
+    font::font(const std::string &font_path)
         : face(nullptr),
-          characters({}){
+          characters({}) {
         if (!font_library_initialized) {
             if (FT_Init_FreeType(&font_library))
                 throw std::runtime_error("cobra: Failed to load freetype library!");
@@ -59,7 +59,7 @@ namespace cobra {
                 texture,
                 glm::ivec2(this->face->glyph->bitmap.width, this->face->glyph->bitmap.rows),
                 glm::ivec2(this->face->glyph->bitmap_left, this->face->glyph->bitmap_top),
-                face->glyph->advance
+                face->glyph->advance.x
             };
 
             this->characters.insert(std::pair<char, character>(c, character_struct));
@@ -67,13 +67,13 @@ namespace cobra {
     }
 
     font::~font() {
-        FT_Done_Face(&this->face);
+        FT_Done_Face(this->face);
     }
 
     /**
      * Destroy freetype library automatically
      */
     __attribute__((destructor)) void destroy_freetype() {
-        FT_Done_FreeType(&font_library);
+        FT_Done_FreeType(font_library);
     }
 }
