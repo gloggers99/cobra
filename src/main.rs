@@ -1,7 +1,8 @@
 mod cobra;
 mod config;
 mod event;
-mod utility;
+mod layout;
+mod window;
 
 use std::error::Error;
 use cobra::Cobra;

@@ -1,9 +1,10 @@
 use crate::event::{Event};
 use crate::config::Config;
+use crate::layout::{Layout, Tiling};
+use crate::window::CobraWindow;
 
-use x11::xlib::{BadAccess, Display, GrabModeAsync, SubstructureNotifyMask, SubstructureRedirectMask, Window, XCloseDisplay, XDefaultRootWindow, XErrorEvent, XGrabKey, XKeysymToKeycode, XNextEvent, XOpenDisplay, XSelectInput, XSetErrorHandler, XSync};
+use x11::xlib::{BadAccess, ButtonPressMask, ButtonReleaseMask, CurrentTime, Display, GrabModeAsync, PointerMotionMask, RevertToParent, SubstructureNotifyMask, SubstructureRedirectMask, Window, XCloseDisplay, XDefaultRootWindow, XErrorEvent, XGrabButton, XGrabKey, XKeysymToKeycode, XNextEvent, XOpenDisplay, XRaiseWindow, XSelectInput, XSetErrorHandler, XSetInputFocus, XSetWindowBorder, XSync};
 
-use std::collections::HashMap;
 use std::error::Error;
 use std::ffi::{c_int, c_uint};
 use std::{mem, ptr};
@@ -36,8 +37,13 @@ pub struct Cobra {
     pub display: *mut Display,
     /// Map window frames to windows
     pub root: Window,
+
     /// List of currently active windows.
-    pub windows: HashMap<Window, Window>
+    pub windows: Vec<CobraWindow>,
+    /// Currently focused window
+    pub focused_window: Option<CobraWindow>,
+
+    pub layout: Box<dyn Layout>
 } impl Drop for Cobra {
     /// Cleanup cobra window manager, close display, etc.
     fn drop(&mut self) {
@@ -65,7 +71,17 @@ pub struct Cobra {
             XSync(display, false as c_int);
         }
 
-        for (key, _) in &config.keys {
+        unsafe {
+            XGrabButton(display, 1, 0, XDefaultRootWindow(display), true as c_int,
+                             (ButtonPressMask|ButtonReleaseMask|PointerMotionMask) as c_uint, GrabModeAsync, GrabModeAsync,
+                             0, 0);
+
+            XGrabButton(display, 3, 0, XDefaultRootWindow(display), true as c_int,
+                             (ButtonPressMask|ButtonReleaseMask|PointerMotionMask) as c_uint, GrabModeAsync, GrabModeAsync,
+                             0, 0);
+        }
+
+        for (key, _) in &config.keymap {
             unsafe {
                 XGrabKey(
                     display,
@@ -83,7 +99,9 @@ pub struct Cobra {
             config,
             display,
             root,
-            windows: HashMap::new()
+            windows: vec![],
+            focused_window: None,
+            layout: Box::new(Tiling {})
         })
     }
 
@@ -103,9 +121,25 @@ pub struct Cobra {
                 Event::MapRequest(map_request) => Event::map_request(self, map_request)?,
                 Event::Unmap(unmap) => Event::unmap(self, unmap)?,
                 Event::KeyPressed(keypressed) => Event::keypressed(self, keypressed)?,
+                Event::ButtonPressed(buttonpressed) => Event::buttonpressed(self, buttonpressed)?,
 
                 Event::None(generic_event) => println!("Unhandled X event: {}", generic_event.get_type())
             }
+        }
+    }
+
+    /// Set a new window as the currently focused window.
+    pub fn focus_window(&mut self, window: CobraWindow) {
+        if let Some(focused_window) = &self.focused_window {
+            unsafe { XSetWindowBorder(self.display, focused_window.frame(), self.config.normal_border_color); }
+        }
+
+        self.focused_window = Some(window);
+        // Because we wrap this in an option we need to do this too.
+        if let Some(focused_window) = &self.focused_window {
+            unsafe { XSetWindowBorder(self.display, focused_window.frame(), self.config.focused_border_color); }
+            unsafe { XSetInputFocus(self.display, focused_window.frame(), RevertToParent, CurrentTime); }
+            unsafe { XRaiseWindow(self.display, focused_window.frame()); }
         }
     }
 }

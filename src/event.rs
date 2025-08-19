@@ -1,12 +1,12 @@
-use crate::cobra::Cobra;
-use crate::utility::frame_window;
+use crate::cobra::{Cobra};
+use crate::window::CobraWindow;
 
 use std::error::Error;
 use std::ffi::c_uint;
 use std::mem;
 
-use x11::xlib::{self, XKeyPressedEvent, XKeysymToKeycode};
-use x11::xlib::{Window, XConfigureRequestEvent, XMapRequestEvent, XUnmapEvent};
+use x11::xlib::{self, XButtonPressedEvent, XKeyPressedEvent, XKeysymToKeycode};
+use x11::xlib::{XConfigureRequestEvent, XMapRequestEvent, XUnmapEvent};
 use x11::xlib::{XConfigureWindow, XDestroyWindow, XEvent, XMapWindow, XRemoveFromSaveSet, XReparentWindow, XWindowChanges};
 
 /// Map XEvent to a rust enum variant.
@@ -15,6 +15,7 @@ pub enum Event {
     MapRequest(XMapRequestEvent),
     Unmap(XUnmapEvent),
     KeyPressed(XKeyPressedEvent),
+    ButtonPressed(XButtonPressedEvent),
     None(XEvent)
 }
 
@@ -25,6 +26,7 @@ impl From<XEvent> for Event {
             xlib::MapRequest => Self::MapRequest(unsafe { event.map_request }),
             xlib::UnmapNotify => Self::Unmap(unsafe { event.unmap }),
             xlib::KeyPress => Self::KeyPressed(unsafe { event.key }),
+            xlib::ButtonPress => Self::ButtonPressed(unsafe { event.button }),
             _ => Self::None(event)
         }
     }
@@ -49,12 +51,17 @@ impl Event {
 
     /// Here we will "map" the window onto the screen when requested.
     pub fn map_request(cobra: &mut Cobra, event: XMapRequestEvent) -> Result<(), Box<dyn Error>> {
-        if let Some((frame, window)) = frame_window(cobra, event.window) {
-            unsafe { XMapWindow(cobra.display, frame); }
-            unsafe { XMapWindow(cobra.display, window); }
+        if let Some(window) = CobraWindow::new(cobra, event.window) {
+            unsafe { XMapWindow(cobra.display, window.frame()); }
+            unsafe { XMapWindow(cobra.display, window.child()); }
 
-            cobra.windows.insert(frame, window);
+
+            cobra.focus_window(window.clone());
+
+            cobra.windows.push(window);
         }
+
+        cobra.layout.arrange(cobra, &cobra.windows);
 
         Ok(())
     }
@@ -63,30 +70,50 @@ impl Event {
     /// event so we do not need to "permit" the action. We do need to remove the frame/window from
     /// the windows map.
     pub fn unmap(cobra: &mut Cobra, event: XUnmapEvent) -> Result<(), Box<dyn Error>> {
-        let frames_to_remove: Vec<(Window, Window)> = cobra.windows
-            .iter()
-            .filter(|&(_, window)| *window == event.window)
-            .map(|(&frame, &client)| (frame, client))
-            .collect();
+        // Find the index of the window to remove (if it exists)
+        let window_index = cobra.windows.iter()
+            .position(|window| window.child() == event.window);
 
-        for (frame, client) in frames_to_remove {
+        if let Some(index) = window_index {
+            let window = &cobra.windows[index];
+            let frame = window.frame();
+            let client = window.child();
+
             unsafe {
                 XReparentWindow(cobra.display, client, cobra.root, 0, 0);
                 XRemoveFromSaveSet(cobra.display, client);
                 XDestroyWindow(cobra.display, frame);
             }
 
-            cobra.windows.remove(&frame);
+            cobra.focused_window = None;
+
+            // Remove the window at the found index
+            cobra.windows.remove(index);
         }
+
+        cobra.layout.arrange(cobra, &cobra.windows);
 
         Ok(())
     }
 
     pub fn keypressed(cobra: &mut Cobra, event: XKeyPressedEvent) -> Result<(), Box<dyn Error>> {
-        for (key, action) in &cobra.config.keys {
+        for (key, action) in &cobra.config.keymap {
             if unsafe { XKeysymToKeycode(cobra.display, key.key as u64) } == event.keycode as u8 {
-                action.action(&event)?;
+                action.action(cobra, &event)?;
             }
+        }
+
+        Ok(())
+    }
+
+    pub fn buttonpressed(cobra: &mut Cobra, event: XButtonPressedEvent) -> Result<(), Box<dyn Error>> {
+        println!("{:?},\n Looking for {}", cobra.windows, event.subwindow);
+        let window = cobra.windows.iter().find(|cobra_window|
+            cobra_window.frame() == event.subwindow || cobra_window.child() == event.subwindow);
+        println!("Searching for window");
+        if let Some(window) = window {
+            println!("Found window");
+            cobra.focus_window(window.clone());
         }
 
         Ok(())
